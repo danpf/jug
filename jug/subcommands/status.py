@@ -21,7 +21,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict, Counter
 from contextlib import contextmanager
 
 import jug
@@ -104,10 +104,13 @@ def load_jugfile(options):
 
 
 def update_status(store, ht, deps, rdeps):
-    tasks_waiting = defaultdict(int)
-    tasks_ready = defaultdict(int)
-    tasks_running = defaultdict(int)
-    tasks_finished = defaultdict(int)
+    class OrderedCounter(Counter, OrderedDict):
+        pass
+
+    tasks_waiting = OrderedCounter()
+    tasks_ready = OrderedCounter()
+    tasks_running = OrderedCounter()
+    tasks_finished = OrderedCounter()
 
     store = memoize_store(store, list_base=True)
     dirty = {}
@@ -157,8 +160,8 @@ def _print_status(options, waiting, ready, running, finished):
         print_task_summary_table(options, [
                                 ("Waiting", waiting),
                                 ("Ready", ready),
-                                ("Finished", finished),
-                                ("Running", running)])
+                                ("Running", running),
+                                ("Finished", finished)])
 
 
 def _clear_cache(options):
@@ -196,11 +199,13 @@ def _status_cached(options):
 def _status_nocache(options):
     store,_ = jug.init(options.jugfile, options.jugdir)
     Task.store = memoize_store(store, list_base=True)
+    class OrderedCounter(Counter, OrderedDict):
+        pass
 
-    tasks_waiting = defaultdict(int)
-    tasks_ready = defaultdict(int)
-    tasks_running = defaultdict(int)
-    tasks_finished = defaultdict(int)
+    tasks_waiting = OrderedCounter()
+    tasks_ready = OrderedCounter()
+    tasks_running = OrderedCounter()
+    tasks_finished = OrderedCounter()
     for t in task.alltasks:
         if t.can_load():
             tasks_finished[t.name] += 1

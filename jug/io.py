@@ -101,10 +101,13 @@ def print_task_summary_table(options, groups):
 
     import textwrap
     num_groups = len(groups)
+    # re-ordered groups for printing names in correct order
+    reord_groups = groups.copy()
+    reord_groups[0], reord_groups[1] = reord_groups[1], reord_groups[0]
 
-    names = set()
-    for _, group_data in groups:
-        names.update(group_data.keys())
+    names = []
+    for _, group_data in reord_groups:
+        names.extend(group_data.keys())
 
     termsize, termheight = get_terminal_size()
     name_width = termsize - (num_groups * 12) - 2
@@ -117,7 +120,7 @@ def print_task_summary_table(options, groups):
     options.print_out(line_format % tuple([g for g, _ in groups] + ["Task name"]))
     options.print_out('-' * format_size)
 
-    for n in sorted(names):
+    for n in names:
         name_lines = textwrap.wrap(n, width=name_width - 4)
         options.print_out(line_format % tuple([g[n] for _, g in groups] + name_lines[:1]))
 
